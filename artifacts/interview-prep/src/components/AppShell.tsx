@@ -55,20 +55,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const active = href === "/" ? location === "/" : location.startsWith(href);
             const item = (
-              <Link key={href} href={href}>
-                <a
-                  data-testid={`nav-${label.toLowerCase().replace(/ \/ /g, "-").replace(/ /g, "-")}`}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg text-sm font-medium transition-all duration-150",
-                    collapsed ? "justify-center h-10 w-10 mx-auto" : "px-3 py-2.5 w-full",
-                    active
-                      ? "bg-primary/15 text-primary shadow-sm"
-                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  )}
-                >
-                  <Icon className={cn("shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4")} />
-                  {!collapsed && <span className="truncate">{label}</span>}
-                </a>
+              <Link
+                key={href}
+                href={href}
+                data-testid={`nav-${label.toLowerCase().replace(/ \/ /g, "-").replace(/ /g, "-")}`}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg text-sm font-medium transition-all duration-150",
+                  collapsed ? "justify-center h-10 w-10 mx-auto" : "px-3 py-2.5 w-full",
+                  active
+                    ? "bg-primary/15 text-primary shadow-sm"
+                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                )}
+              >
+                <Icon className={cn("shrink-0", collapsed ? "h-5 w-5" : "h-4 w-4")} />
+                {!collapsed && <span className="truncate">{label}</span>}
               </Link>
             );
 

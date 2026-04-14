@@ -157,10 +157,11 @@ export default function DashboardPage() {
                     className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/30 transition-colors group"
                     style={{ animationDelay: `${i * 40}ms` }}
                   >
-                    <Link href={`/questions/${q.id}`}>
-                      <a className="flex-1 min-w-0 text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                        {q.title}
-                      </a>
+                    <Link
+                      href={`/questions/${q.id}`}
+                      className="flex-1 min-w-0 text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1"
+                    >
+                      {q.title}
                     </Link>
                     <div className="flex items-center gap-2 shrink-0">
                       {q.tags.slice(0, 2).map((tag) => (

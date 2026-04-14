@@ -4,10 +4,10 @@ import { db, type Question, type Group, type Category } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Pencil, Trash2, Code, ExternalLink, Copy, Check } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Code, ExternalLink } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { CodeBlock, InlineCode } from "@/components/CodeBlock";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,43 +21,35 @@ import {
 import { cn } from "@/lib/utils";
 
 const DIFFICULTY_CONFIG = {
-  easy:   { label: "Easy",   cls: "bg-emerald-500/12 text-emerald-600 border-emerald-500/25 dark:text-emerald-400" },
-  medium: { label: "Medium", cls: "bg-amber-500/12 text-amber-600 border-amber-500/25 dark:text-amber-400" },
-  hard:   { label: "Hard",   cls: "bg-red-500/12 text-red-600 border-red-500/25 dark:text-red-400" },
+  easy:   { label: "Easy",   cls: "bg-emerald-500/10 text-emerald-600 border-emerald-500/25 dark:text-emerald-400" },
+  medium: { label: "Medium", cls: "bg-amber-500/10 text-amber-600 border-amber-500/25 dark:text-amber-400" },
+  hard:   { label: "Hard",   cls: "bg-red-500/10 text-red-600 border-red-500/25 dark:text-red-400" },
 };
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const copy = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
-  };
-  return (
-    <button
-      onClick={copy}
-      className="flex items-center gap-1.5 text-[11px] font-medium text-sidebar-foreground/60 hover:text-sidebar-foreground/90 transition-colors"
-    >
-      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-      {copied ? "Copied" : "Copy"}
-    </button>
-  );
-}
+/** Custom renderers so markdown code blocks match the Code tab style */
+const markdownComponents = {
+  // Fenced code blocks → full CodeBlock with syntax highlighting
+  pre({ children }: { children?: React.ReactNode }) {
+    return <>{children}</>;
+  },
+  code({ className, children, ...rest }: { className?: string; children?: React.ReactNode; [key: string]: unknown }) {
+    const lang = /language-(\w+)/.exec(className ?? "")?.[1];
+    const code = String(children ?? "").replace(/\n$/, "");
 
-function CodeBlock({ title, language, code }: { title: string; language: string; code: string }) {
-  return (
-    <div className="code-block">
-      <div className="code-block-header">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-sidebar-foreground/80">{title || "Code"}</span>
-          <span className="px-1.5 py-0.5 rounded bg-sidebar-accent/50 text-sidebar-foreground/50 font-mono text-[10px]">{language}</span>
-        </div>
-        <CopyButton text={code} />
+    if (!lang) {
+      return <InlineCode>{children}</InlineCode>;
+    }
+    return (
+      <div className="my-4">
+        <CodeBlock code={code} language={lang} />
       </div>
-      <pre><code>{code}</code></pre>
-    </div>
-  );
-}
+    );
+  },
+  // Inline code
+  inlineCode({ children }: { children?: React.ReactNode }) {
+    return <InlineCode>{children}</InlineCode>;
+  },
+};
 
 export default function QuestionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -115,9 +107,9 @@ export default function QuestionDetailPage() {
   const diff = DIFFICULTY_CONFIG[question.difficulty];
 
   return (
-    <div className="min-h-full">
-      {/* Sticky header */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur border-b border-border px-8 py-3 flex items-center justify-between gap-4">
+    <div className="min-h-full flex flex-col">
+      {/* ── Band 1: nav (sticky) ─────────────────────────── */}
+      <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border px-8 py-2.5 flex items-center justify-between gap-4 shrink-0">
         <Button variant="ghost" size="sm" className="-ml-2 text-muted-foreground hover:text-foreground" asChild>
           <Link href="/questions">
             <ArrowLeft className="h-4 w-4 mr-1.5" />
@@ -143,127 +135,134 @@ export default function QuestionDetailPage() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-3xl mx-auto px-8 py-8">
-        {/* Title block */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold leading-tight text-foreground mb-4">{question.title}</h1>
-          <div className="flex items-center flex-wrap gap-2">
+      {/* ── Band 2: question title + meta (sticky) ──────── */}
+      <div className="sticky top-[41px] z-10 bg-background/90 backdrop-blur-md border-b border-border px-8 py-4 shrink-0">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-xl font-bold leading-snug text-foreground mb-2.5">{question.title}</h1>
+          <div className="flex items-center flex-wrap gap-1.5">
             <Badge
               variant="secondary"
-              className={cn("capitalize border text-xs px-2.5 py-0.5 font-medium", diff.cls)}
+              className={cn("capitalize border text-xs px-2.5 py-0.5 font-semibold", diff.cls)}
             >
               {diff.label}
             </Badge>
             {group && (
-              <Badge variant="outline" className="text-xs font-medium">
-                📁 {group.name}
+              <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
+                {group.name}
               </Badge>
             )}
             {category && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs text-muted-foreground">
                 {category.name}
               </Badge>
             )}
             {question.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs bg-primary/8 text-primary border-primary/20">
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="text-xs bg-primary/8 text-primary border-primary/20 font-medium"
+              >
                 #{tag}
               </Badge>
             ))}
           </div>
         </div>
-
-        <Separator className="mb-6" />
-
-        {/* Tabs */}
-        <Tabs defaultValue="answer">
-          <TabsList className="mb-6 h-10 gap-0.5 bg-muted/60 p-1 rounded-xl">
-            <TabsTrigger value="answer" className="rounded-lg text-sm">Short Answer</TabsTrigger>
-            <TabsTrigger value="explanation" className="rounded-lg text-sm">Explanation</TabsTrigger>
-            {question.codeExamples.length > 0 && (
-              <TabsTrigger value="code" className="rounded-lg text-sm">
-                <Code className="h-3.5 w-3.5 mr-1.5" />
-                Code ({question.codeExamples.length})
-              </TabsTrigger>
-            )}
-          </TabsList>
-
-          {/* Answer tab */}
-          <TabsContent value="answer">
-            {question.shortAnswer ? (
-              <div className="p-5 rounded-xl bg-card border border-border">
-                <p className="text-foreground leading-relaxed text-[15px]">{question.shortAnswer}</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-                <p className="text-sm italic">No short answer provided.</p>
-                <Button variant="outline" size="sm" className="mt-3" asChild>
-                  <Link href={`/questions/${question.id}/edit`}>Add one</Link>
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Explanation tab */}
-          <TabsContent value="explanation">
-            {question.explanation ? (
-              <div className="p-6 rounded-xl bg-card border border-border">
-                <div className="prose prose-sm dark:prose-invert max-w-none prose-content
-                  prose-headings:font-semibold prose-headings:tracking-tight
-                  prose-h2:text-lg prose-h2:mt-6 prose-h2:mb-3
-                  prose-h3:text-base prose-h3:mt-4 prose-h3:mb-2
-                  prose-p:leading-relaxed prose-p:text-[14.5px]
-                  prose-li:text-[14.5px] prose-li:leading-relaxed
-                  prose-strong:font-semibold
-                  prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-                ">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {question.explanation}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-                <p className="text-sm italic">No detailed explanation provided.</p>
-                <Button variant="outline" size="sm" className="mt-3" asChild>
-                  <Link href={`/questions/${question.id}/edit`}>Add one</Link>
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Code tab */}
-          {question.codeExamples.length > 0 && (
-            <TabsContent value="code" className="space-y-4">
-              {question.codeExamples.map((example) => (
-                <CodeBlock
-                  key={example.id}
-                  title={example.title}
-                  language={example.language}
-                  code={example.code}
-                />
-              ))}
-            </TabsContent>
-          )}
-        </Tabs>
-
-        {/* Source link */}
-        {question.source && (
-          <div className="mt-8 pt-6 border-t border-border">
-            <a
-              href={question.source}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
-              data-testid="link-source"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Source / Reference
-            </a>
-          </div>
-        )}
       </div>
 
+      {/* ── Content ─────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto px-8 py-6">
+          <Tabs defaultValue="answer">
+            {/* ── Band 3: tabs (sticky below both bars) ── */}
+            <div className="sticky top-[calc(41px+73px)] z-10 bg-background/90 backdrop-blur-md pb-4 -mx-8 px-8 pt-0">
+              <TabsList className="h-10 gap-0.5 bg-muted/70 p-1 rounded-xl border border-border/60">
+                <TabsTrigger value="answer" className="rounded-lg text-[13px] px-4">Short Answer</TabsTrigger>
+                <TabsTrigger value="explanation" className="rounded-lg text-[13px] px-4">Explanation</TabsTrigger>
+                {question.codeExamples.length > 0 && (
+                  <TabsTrigger value="code" className="rounded-lg text-[13px] px-4">
+                    <Code className="h-3.5 w-3.5 mr-1.5" />
+                    Code ({question.codeExamples.length})
+                  </TabsTrigger>
+                )}
+              </TabsList>
+            </div>
+
+            {/* ── Short Answer ─────────────────────────── */}
+            <TabsContent value="answer" className="mt-0">
+              {question.shortAnswer ? (
+                <div className="p-5 rounded-xl bg-card border border-border leading-relaxed text-[15px] text-foreground">
+                  {question.shortAnswer}
+                </div>
+              ) : (
+                <EmptyState message="No short answer provided." questionId={question.id} />
+              )}
+            </TabsContent>
+
+            {/* ── Explanation (Markdown) ───────────────── */}
+            <TabsContent value="explanation" className="mt-0">
+              {question.explanation ? (
+                <div className="rounded-xl bg-card border border-border overflow-hidden">
+                  <div className="px-6 py-5 prose prose-sm dark:prose-invert max-w-none prose-content
+                    prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-foreground
+                    prose-h2:text-[1.1rem] prose-h2:mt-7 prose-h2:mb-3 prose-h2:pb-2 prose-h2:border-b prose-h2:border-border
+                    prose-h3:text-[1rem] prose-h3:mt-5 prose-h3:mb-2
+                    prose-p:leading-[1.8] prose-p:text-[14.5px] prose-p:text-foreground/90
+                    prose-li:text-[14.5px] prose-li:leading-[1.8] prose-li:text-foreground/90
+                    prose-strong:text-foreground prose-strong:font-semibold
+                    prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                    prose-hr:border-border
+                    prose-blockquote:border-l-primary prose-blockquote:not-italic prose-blockquote:text-muted-foreground
+                    prose-table:text-[13.5px]
+                  ">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={markdownComponents as Record<string, unknown>}
+                    >
+                      {question.explanation}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState message="No detailed explanation provided." questionId={question.id} />
+              )}
+            </TabsContent>
+
+            {/* ── Code Examples ────────────────────────── */}
+            {question.codeExamples.length > 0 && (
+              <TabsContent value="code" className="mt-0 space-y-4">
+                {question.codeExamples.map((example) => (
+                  <CodeBlock
+                    key={example.id}
+                    title={example.title}
+                    language={example.language}
+                    code={example.code}
+                  />
+                ))}
+              </TabsContent>
+            )}
+          </Tabs>
+
+          {/* Source link */}
+          {question.source && (
+            <div className="mt-8 pt-5 border-t border-border">
+              <a
+                href={question.source}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
+                data-testid="link-source"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                Source / Reference
+              </a>
+            </div>
+          )}
+
+          <div className="h-12" />
+        </div>
+      </div>
+
+      {/* Delete dialog */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -278,6 +277,17 @@ export default function QuestionDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+function EmptyState({ message, questionId }: { message: string; questionId: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <p className="text-sm text-muted-foreground italic mb-3">{message}</p>
+      <Button variant="outline" size="sm" asChild>
+        <Link href={`/questions/${questionId}/edit`}>Add one</Link>
+      </Button>
     </div>
   );
 }

@@ -126,9 +126,7 @@ export interface QuestionFilters {
   categoryId?: string;
 }
 
-const PAGE_SIZE = 20;
-
-export function useQuestions(filters: QuestionFilters = {}, page = 1) {
+export function useQuestions(filters: QuestionFilters = {}, page = 1, pageSize = 10) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [total, setTotal] = useState(0);
   const [allTags, setAllTags] = useState<string[]>([]);
@@ -173,9 +171,9 @@ export function useQuestions(filters: QuestionFilters = {}, page = 1) {
     }
 
     setTotal(all.length);
-    const start = (page - 1) * PAGE_SIZE;
-    setQuestions(all.slice(start, start + PAGE_SIZE));
-  }, [filters.search, filters.difficulty, filters.tags, filters.groupId, filters.categoryId, page]);
+    const start = (page - 1) * pageSize;
+    setQuestions(all.slice(start, start + pageSize));
+  }, [filters.search, filters.difficulty, filters.tags, filters.groupId, filters.categoryId, page, pageSize]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -209,8 +207,8 @@ export function useQuestions(filters: QuestionFilters = {}, page = 1) {
     questions,
     total,
     allTags,
-    pageSize: PAGE_SIZE,
-    totalPages: Math.ceil(total / PAGE_SIZE),
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
     createQuestion,
     updateQuestion,
     deleteQuestion,

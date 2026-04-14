@@ -377,4 +377,40 @@
     padding: 0.5rem 0.75rem;
     border: 1px solid hsl(var(--border));
   }
+
+  /* ── prose code blocks — delegate to CodeBlock component ─── */
+  .prose-content pre {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    overflow: visible !important;
+  }
+  .prose-content pre > .code-block-wrapper {
+    margin: 1em 0;
+  }
 }
+
+/* ── Highlight.js token colors (custom dark theme) ──────────── */
+.hljs { color: hsl(216 28% 85%); }
+.hljs-comment, .hljs-quote                          { color: hsl(220 14% 46%); font-style: italic; }
+.hljs-doctag, .hljs-keyword, .hljs-formula          { color: hsl(286 60% 67%); }
+.hljs-section, .hljs-name, .hljs-selector-tag,
+.hljs-deletion, .hljs-subst                         { color: hsl(355 65% 65%); }
+.hljs-literal                                        { color: hsl(187 47% 55%); }
+.hljs-string, .hljs-regexp, .hljs-addition,
+.hljs-attribute, .hljs-meta .hljs-string            { color: hsl(95 38% 62%); }
+.hljs-built_in, .hljs-title.class_,
+.hljs-class .hljs-title                              { color: hsl(29 54% 61%); }
+.hljs-attr, .hljs-variable, .hljs-template-variable,
+.hljs-type, .hljs-selector-class,
+.hljs-selector-attr, .hljs-selector-pseudo,
+.hljs-number                                         { color: hsl(29 54% 61%); }
+.hljs-symbol, .hljs-bullet, .hljs-link,
+.hljs-meta, .hljs-selector-id, .hljs-title          { color: hsl(207 82% 66%); }
+.hljs-emphasis   { font-style: italic; }
+.hljs-strong     { font-weight: bold; }
+.hljs-link       { text-decoration: underline; }
+.hljs-punctuation, .hljs-operator                   { color: hsl(220 14% 71%); }
+.hljs-tag                                            { color: hsl(355 65% 65%); }
+.hljs-tag .hljs-attr                                 { color: hsl(207 82% 66%); }
+.hljs-function .hljs-title, .hljs-title.function_   { color: hsl(207 82% 66%); }
