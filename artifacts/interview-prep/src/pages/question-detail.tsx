@@ -26,28 +26,22 @@ const DIFFICULTY_CONFIG = {
   hard:   { label: "Hard",   cls: "bg-red-500/10 text-red-600 border-red-500/25 dark:text-red-400" },
 };
 
-/** Custom renderers so markdown code blocks match the Code tab style */
+/** Custom renderers: fenced code blocks → shared CodeBlock component */
 const markdownComponents = {
-  // Fenced code blocks → full CodeBlock with syntax highlighting
   pre({ children }: { children?: React.ReactNode }) {
     return <>{children}</>;
   },
-  code({ className, children, ...rest }: { className?: string; children?: React.ReactNode; [key: string]: unknown }) {
+  code({ className, children }: { className?: string; children?: React.ReactNode }) {
     const lang = /language-(\w+)/.exec(className ?? "")?.[1];
     const code = String(children ?? "").replace(/\n$/, "");
-
     if (!lang) {
       return <InlineCode>{children}</InlineCode>;
     }
     return (
-      <div className="my-4">
+      <div className="my-5">
         <CodeBlock code={code} language={lang} />
       </div>
     );
-  },
-  // Inline code
-  inlineCode({ children }: { children?: React.ReactNode }) {
-    return <InlineCode>{children}</InlineCode>;
   },
 };
 
@@ -59,6 +53,7 @@ export default function QuestionDetailPage() {
   const [category, setCategory] = useState<Category | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("answer");
 
   useEffect(() => {
     async function load() {
@@ -84,7 +79,7 @@ export default function QuestionDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="flex items-center justify-center h-full min-h-[50vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           <p className="text-sm text-muted-foreground">Loading question...</p>
@@ -95,7 +90,7 @@ export default function QuestionDetailPage() {
 
   if (!question) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-8">
+      <div className="flex flex-col items-center justify-center h-full min-h-[50vh] text-center px-8">
         <p className="text-lg font-medium">Question not found</p>
         <Button variant="outline" className="mt-4" asChild>
           <Link href="/questions">Back to questions</Link>
@@ -105,11 +100,19 @@ export default function QuestionDetailPage() {
   }
 
   const diff = DIFFICULTY_CONFIG[question.difficulty];
+  const hasCode = question.codeExamples.length > 0;
 
   return (
-    <div className="min-h-full flex flex-col">
-      {/* ── Band 1: nav (sticky) ─────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-md border-b border-border px-8 py-2.5 flex items-center justify-between gap-4 shrink-0">
+    /**
+     * Layout: the outer div fills the full height of <main>.
+     * Three shrink-0 header bands + one flex-1 scroll area.
+     * ALL sticky behaviour is achieved by them being outside the scroll container —
+     * no `position: sticky` is needed.
+     */
+    <div className="flex flex-col h-full">
+
+      {/* ── Band 1: nav bar ─────────────────────────────────── */}
+      <div className="shrink-0 border-b border-border bg-background/95 backdrop-blur-sm px-8 py-2.5 flex items-center justify-between gap-4 z-10">
         <Button variant="ghost" size="sm" className="-ml-2 text-muted-foreground hover:text-foreground" asChild>
           <Link href="/questions">
             <ArrowLeft className="h-4 w-4 mr-1.5" />
@@ -135,10 +138,12 @@ export default function QuestionDetailPage() {
         </div>
       </div>
 
-      {/* ── Band 2: question title + meta (sticky) ──────── */}
-      <div className="sticky top-[41px] z-10 bg-background/90 backdrop-blur-md border-b border-border px-8 py-4 shrink-0">
+      {/* ── Band 2: question title + metadata ───────────────── */}
+      <div className="shrink-0 border-b border-border bg-background/95 backdrop-blur-sm px-8 py-4 z-10">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-xl font-bold leading-snug text-foreground mb-2.5">{question.title}</h1>
+          <h1 className="text-xl font-bold leading-snug text-foreground mb-2.5">
+            {question.title}
+          </h1>
           <div className="flex items-center flex-wrap gap-1.5">
             <Badge
               variant="secondary"
@@ -169,28 +174,44 @@ export default function QuestionDetailPage() {
         </div>
       </div>
 
-      {/* ── Content ─────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-8 py-6">
-          <Tabs defaultValue="answer">
-            {/* ── Band 3: tabs (sticky below both bars) ── */}
-            <div className="sticky top-[calc(41px+73px)] z-10 bg-background/90 backdrop-blur-md pb-4 -mx-8 px-8 pt-0">
-              <TabsList className="h-10 gap-0.5 bg-muted/70 p-1 rounded-xl border border-border/60">
-                <TabsTrigger value="answer" className="rounded-lg text-[13px] px-4">Short Answer</TabsTrigger>
-                <TabsTrigger value="explanation" className="rounded-lg text-[13px] px-4">Explanation</TabsTrigger>
-                {question.codeExamples.length > 0 && (
-                  <TabsTrigger value="code" className="rounded-lg text-[13px] px-4">
-                    <Code className="h-3.5 w-3.5 mr-1.5" />
-                    Code ({question.codeExamples.length})
-                  </TabsTrigger>
-                )}
-              </TabsList>
-            </div>
+      {/*
+        Tabs wraps everything below band 2.
+        TabsList lives in Band 3 (outside scroll).
+        TabsContent lives in the scrollable area.
+      */}
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="flex flex-col flex-1 min-h-0"
+      >
+        {/* ── Band 3: tab switcher ─────────────────────────── */}
+        <div className="shrink-0 border-b border-border bg-background/95 backdrop-blur-sm px-8 py-2.5 z-10">
+          <div className="max-w-3xl mx-auto">
+            <TabsList className="h-9 gap-0.5 bg-muted/70 p-1 rounded-xl border border-border/60">
+              <TabsTrigger value="answer" className="rounded-lg text-[13px] px-4 h-7">
+                Short Answer
+              </TabsTrigger>
+              <TabsTrigger value="explanation" className="rounded-lg text-[13px] px-4 h-7">
+                Explanation
+              </TabsTrigger>
+              {hasCode && (
+                <TabsTrigger value="code" className="rounded-lg text-[13px] px-4 h-7">
+                  <Code className="h-3.5 w-3.5 mr-1.5" />
+                  Code ({question.codeExamples.length})
+                </TabsTrigger>
+              )}
+            </TabsList>
+          </div>
+        </div>
 
-            {/* ── Short Answer ─────────────────────────── */}
-            <TabsContent value="answer" className="mt-0">
+        {/* ── Scrollable content area ──────────────────────── */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-8 py-6">
+
+            {/* Short Answer */}
+            <TabsContent value="answer" className="mt-0 focus-visible:outline-none">
               {question.shortAnswer ? (
-                <div className="p-5 rounded-xl bg-card border border-border leading-relaxed text-[15px] text-foreground">
+                <div className="p-5 rounded-xl bg-card border border-border text-[15px] leading-relaxed text-foreground">
                   {question.shortAnswer}
                 </div>
               ) : (
@@ -198,8 +219,8 @@ export default function QuestionDetailPage() {
               )}
             </TabsContent>
 
-            {/* ── Explanation (Markdown) ───────────────── */}
-            <TabsContent value="explanation" className="mt-0">
+            {/* Explanation — Markdown */}
+            <TabsContent value="explanation" className="mt-0 focus-visible:outline-none">
               {question.explanation ? (
                 <div className="rounded-xl bg-card border border-border overflow-hidden">
                   <div className="px-6 py-5 prose prose-sm dark:prose-invert max-w-none prose-content
@@ -227,9 +248,9 @@ export default function QuestionDetailPage() {
               )}
             </TabsContent>
 
-            {/* ── Code Examples ────────────────────────── */}
-            {question.codeExamples.length > 0 && (
-              <TabsContent value="code" className="mt-0 space-y-4">
+            {/* Code Examples */}
+            {hasCode && (
+              <TabsContent value="code" className="mt-0 space-y-4 focus-visible:outline-none">
                 {question.codeExamples.map((example) => (
                   <CodeBlock
                     key={example.id}
@@ -240,29 +261,29 @@ export default function QuestionDetailPage() {
                 ))}
               </TabsContent>
             )}
-          </Tabs>
 
-          {/* Source link */}
-          {question.source && (
-            <div className="mt-8 pt-5 border-t border-border">
-              <a
-                href={question.source}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
-                data-testid="link-source"
-              >
-                <ExternalLink className="h-3.5 w-3.5" />
-                Source / Reference
-              </a>
-            </div>
-          )}
+            {/* Source link */}
+            {question.source && (
+              <div className="mt-8 pt-5 border-t border-border">
+                <a
+                  href={question.source}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
+                  data-testid="link-source"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Source / Reference
+                </a>
+              </div>
+            )}
 
-          <div className="h-12" />
+            <div className="h-12" />
+          </div>
         </div>
-      </div>
+      </Tabs>
 
-      {/* Delete dialog */}
+      {/* Delete confirmation */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -271,7 +292,10 @@ export default function QuestionDetailPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

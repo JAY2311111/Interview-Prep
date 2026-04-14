@@ -378,15 +378,19 @@
     border: 1px solid hsl(var(--border));
   }
 
-  /* ── prose code blocks — delegate to CodeBlock component ─── */
-  .prose-content pre {
+  /* ── prose code blocks — reset only raw prose pre, not CodeBlock's pre ── */
+  .prose-content pre:not([data-code-block]) {
     padding: 0 !important;
     background: transparent !important;
     border: none !important;
     overflow: visible !important;
   }
-  .prose-content pre > .code-block-wrapper {
-    margin: 1em 0;
+  /* Ensure CodeBlock pre retains its own padding even inside prose */
+  .prose-content pre[data-code-block] {
+    padding: 1.25rem !important;
+    background: transparent !important;
+    border: none !important;
+    margin: 0 !important;
   }
 }
 

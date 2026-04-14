@@ -84,7 +84,7 @@ export function CodeBlock({ code, language = "plaintext", title, className }: Co
       </div>
       {/* Code body */}
       <div className="bg-[hsl(226_44%_8%)] overflow-x-auto">
-        <pre className="p-5 text-[13px] leading-[1.8] font-mono m-0">
+        <pre data-code-block className="p-5 text-[13px] leading-[1.8] font-mono m-0">
           <code ref={codeRef} className={`language-${language} hljs`} />
         </pre>
       </div>
