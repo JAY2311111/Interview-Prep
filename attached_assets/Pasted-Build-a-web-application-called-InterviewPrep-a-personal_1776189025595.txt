@@ -1,0 +1,139 @@
+Build a web application called **InterviewPrep** — a personal, offline-first knowledge base for software developers preparing for technical interviews.
+
+## Core Idea
+
+The application allows users to create and manage their own structured database of interview preparation material, including questions, answers, explanations, and code examples. The system must work fully offline using browser storage and should not require authentication or external servers.
+
+## Purpose
+
+The goal is to help developers organize scattered interview knowledge into a single, structured, searchable system that improves learning, retention, and review efficiency.
+
+## Key Concepts
+
+* Data is organized hierarchically:
+
+  * Groups (e.g., React, JavaScript)
+  * Categories (e.g., Hooks, Closures)
+  * Questions (actual interview questions)
+
+* Each question can contain:
+
+  * Title (required)
+  * Difficulty (easy, medium, hard)
+  * Tags (array of strings)
+  * Short answer (optional)
+  * Detailed explanation (markdown-supported text)
+  * Multiple code examples (each with title, language, and code)
+  * Source/reference link (optional)
+
+## Core Features
+
+### 1. User Profile
+
+* Create a local user profile with name and avatar
+* Persist profile in browser storage
+* Skip onboarding if profile already exists
+
+### 2. Data Management (CRUD)
+
+* Create, read, update, delete:
+
+  * Groups
+  * Categories (linked to groups)
+  * Questions (linked to categories)
+* Cascade deletion:
+
+  * Deleting a group removes its categories and questions
+  * Deleting a category removes its questions
+
+### 3. Search & Filtering
+
+* Full-text search across:
+
+  * Question title
+  * Short answer
+  * Tags
+* Filter by:
+
+  * Difficulty (multi-select)
+  * Tags (multi-select)
+  * Group or category
+* Combine filters using AND logic
+
+### 4. Pagination
+
+* Paginate questions (default limit per page)
+* Reset pagination when filters change
+
+### 5. Code Examples
+
+* Support multiple code snippets per question
+* Each snippet includes:
+
+  * Title
+  * Programming language
+  * Code content
+
+### 6. Data Persistence (Offline-First)
+
+* Store all data locally using browser database (IndexedDB or equivalent)
+* Ensure all operations work without internet
+* No external API calls required
+
+### 7. Import / Export
+
+* Export all user data into a JSON file
+* Import data from JSON file with:
+
+  * Validation
+  * Option to merge or replace existing data
+
+### 8. Theme & Personalization (Extended Feature)
+
+* Allow users to customize:
+
+  * Theme mode (light/dark)
+  * Font family selection
+  * Font size (small, medium, large or scalable)
+* Persist all preferences locally
+* Apply preferences globally across the app
+
+### 9. Data Structure Requirements
+
+Implement structured data models for:
+
+* User
+* Group
+* Category
+* Question
+* CodeExample
+
+Ensure:
+
+* Unique IDs
+* Timestamps for creation and updates
+* Proper relationships between entities
+
+### 10. Performance Considerations
+
+* Efficient querying for search and filters
+* Handle large datasets (thousands of questions)
+* Optimize read/write operations in local storage
+
+## Constraints
+
+* No backend or cloud dependency
+* No authentication system
+* Everything must run locally in the browser
+* Focus only on functionality, logic, and data handling
+
+## Output Expectation
+
+Generate a complete working implementation of this application including:
+
+* Data models
+* State management logic
+* Storage handling
+* Core business logic for all features
+
+Do not include styling, UI/UX design, or visual components—focus only on functionality and system behavior.
