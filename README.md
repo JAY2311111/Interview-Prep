@@ -38,36 +38,49 @@ All data is stored locally in your browser using IndexedDB — nothing is sent t
 
 ---
 
-## Getting Started
+## Running Locally (Windows, Mac, Linux)
 
-### Prerequisites
+### Step 1 — Install Node.js
 
-- [Node.js](https://nodejs.org/) v18 or higher
-- [pnpm](https://pnpm.io/) (recommended) — or npm / yarn
+Download and install **Node.js v22** (LTS) from https://nodejs.org/
 
-### Installation
+> Node.js 20.19+ or 22.12+ is required. If you have an older version, download the latest LTS from the link above.
 
-```bash
-# Clone the repository
+To check your current version: `node --version`
+
+### Step 2 — Install pnpm
+
+Open a terminal (Command Prompt or PowerShell on Windows) and run:
+
+```
+npm install -g pnpm
+```
+
+### Step 3 — Clone and install
+
+```
 git clone https://github.com/JAY2311111/Interview-Prep.git
 cd Interview-Prep
-
-# Install dependencies
 pnpm install
+```
 
-# Start the development server
+### Step 4 — Start the app
+
+```
 pnpm --filter @workspace/interview-prep run dev
 ```
 
-The app will be available at **http://localhost:5173** (or the port Vite assigns).
+The app opens at **http://localhost:5173** — just visit that URL in your browser.
 
-### Build for production
+---
 
-```bash
+## Build for Production
+
+```
 pnpm --filter @workspace/interview-prep run build
 ```
 
-The production-ready files will be in `artifacts/interview-prep/dist/`. You can serve them with any static file host (Netlify, Vercel, GitHub Pages, etc.).
+Output goes to `artifacts/interview-prep/dist/public/`. You can upload that folder to any static host (Netlify, Vercel, GitHub Pages, etc.).
 
 ---
 
@@ -105,31 +118,9 @@ artifacts/interview-prep/src/
 
 ## Data Storage
 
-All data lives in your browser's **IndexedDB** database. It includes:
+All data lives in your browser's **IndexedDB** database. Nothing is ever sent to a server.
 
-- `users` — your profile (name, avatar)
-- `groups` — top-level topic groups
-- `categories` — sub-groups within a group
-- `questions` — questions with answers, explanations, code examples, tags
-- `settings` — theme and font preferences
-
-**Nothing is ever sent to a server.**
-
-### Backup & restore
-
-Use the **Import / Export** page to download a full JSON snapshot of all your data. Import it on another device (or browser) to restore or merge your knowledge base.
-
----
-
-## Deployment
-
-Since this is a static single-page app, you can deploy it anywhere:
-
-- **Vercel / Netlify** — connect the repo, set the build command to `pnpm --filter @workspace/interview-prep run build` and publish directory to `artifacts/interview-prep/dist`
-- **GitHub Pages** — push the `dist` folder or use GitHub Actions
-- **Any static host** — just upload the contents of `artifacts/interview-prep/dist/`
-
-> Note: because all storage is browser-local (IndexedDB), each device/browser will have its own separate database. Use Import/Export to sync between devices.
+Use the **Import / Export** page to back up your data as a JSON file or restore it on another device.
 
 ---
 
