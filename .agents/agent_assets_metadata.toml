@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "DMe6yxbHQHQbUWxCEWqEB"
+uri = "file://interview-prep.zip"
+type = "unspecified"
+title = "InterviewPrep — Source Code + README"
